@@ -37,7 +37,12 @@ const Detail = () => {
 
   useEffect(() => {
     api.get(`points/${routeParams.point_id}`).then(response => {
-      setData(response.data)
+      const point = {
+        point : response.data.serializedPoint,
+        items: response.data.items
+      }
+
+      setData(point)
     })
   }, [])
 
@@ -55,13 +60,14 @@ const Detail = () => {
   function handleWhatsapp(){
     Linking.openURL(`whatsapp://send?phone=${data.point.whatsapp}&text=Tenho interesse na coleta de resíduos`)
   }
-
+  
   if(!data.point) {
     return null
   }
 
+  console.log(data.point)
   return (
-    <SafeAreaView style={{flex: 1}}>
+    <SafeAreaView style={ {flex: 1} }>
       <View style={styles.container}>
         <TouchableOpacity onPress={handleNavigateBack}>
           <Icon name="arrow-left"  size={20} color="#34cb79" />
@@ -91,7 +97,7 @@ const Detail = () => {
           <Text style={styles.buttonText}>E-mail</Text>
         </RectButton>
       </View>
-    </SafeAreaView>
+    </SafeAreaView> 
   )
 }
 
@@ -99,7 +105,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 32,
-    paddingTop: 20 + Constants.statusBarHeight,
+    paddingTop: 20 + Constants.statusBarHeight
   },
 
   pointImage: {

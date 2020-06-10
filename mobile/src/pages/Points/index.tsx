@@ -21,6 +21,7 @@ interface Point {
   image_url: string,
   location_lat: number,
   location_lng: number,
+  items: string
 }
 
 interface Params {
@@ -31,6 +32,7 @@ interface Params {
 const Points = () => {
   const [items, setItems] = useState<Item[]>([])
   const [points, setPoints] = useState<Point[]>([])
+  const [visiblePoints, setVisiblePoints] = useState<Point[]>([])
   const [selectedItems, setSelectedItems] = useState<number[]>([])
   
   const [initialPosition, setInitialPosition] = useState<[number, number]>([0, 0])
@@ -40,9 +42,40 @@ const Points = () => {
 
   const routeParams = route.params as Params
 
-
-
+  //Load all the points from the city passed as Param
   useEffect(() => {
+    api.get('points_filtered', {
+      params: {
+        city: routeParams.city,
+        uf: routeParams.uf,
+        items: ''
+      }
+    }).then(response => {
+      setPoints(response.data)
+    })
+  }, [])
+
+  //Used to load the items buttons and to cache the selected items
+  useEffect(() => {
+    api.get('items').then(response => {
+      setItems(response.data)
+    })
+  }, [])
+
+  //put all the items as selected by default
+  useEffect(() => {
+    setSelectedItems(items.map(item => (Number(item.id))))
+  }, [items])
+
+  //if the city has at least one point, recenter the map for the city
+  //else recenter the map for the user location
+  useEffect(() => {
+    if(points.length > 0 )
+    {
+      setInitialPosition([Number(points[0].location_lat), Number(points[0].location_lng)])
+      return
+    }
+
     async function loadPosition() {
       const { status } = await Location.requestPermissionsAsync()
 
@@ -62,28 +95,21 @@ const Points = () => {
         longitude
       ])
     }
-
+    
     loadPosition()
-  }, [])
+  }, [points])
 
+  //filter the points to be visible and update the visible points
   useEffect(() => {
-    api.get('points_filtered', {
-      params: {
-        city: routeParams.city,
-        uf: routeParams.uf,
-        items: selectedItems
-      }
-    }).then(response => {
-      setPoints(response.data)
-    })
-
+    const filteredPoints = points.filter(point => (
+      selectedItems.filter(item => (
+        point.items.includes(String(item)))
+      ).length > 0
+    ))
+    
+    setVisiblePoints(filteredPoints)
   }, [selectedItems])
-
-  useEffect(() => {
-    api.get('items').then(response => {
-      setItems(response.data)
-    })
-  })
+  
 
   function handleNavigateHome() {
     navigation.goBack()
@@ -129,7 +155,7 @@ const Points = () => {
                longitudeDelta: 0.014
              }}
            >
-             {points.map(point => (
+             {visiblePoints.map(point => (
                <Marker
                 key={String(point.id)}
                 style={styles.mapMarker}

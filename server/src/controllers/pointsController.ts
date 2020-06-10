@@ -9,7 +9,7 @@ class PointsController {
       const serializedPoints = points.map(point => {
         return {
           ...point,
-          image_url: `http://192.168.0.112:3333/uploads/points_images/${point.image}`
+          image_url: `http://${process.env.LOCAL_IP}:3333/uploads/points_images/${point.image}`
         }
       })
 
@@ -19,6 +19,7 @@ class PointsController {
     async index_filtered(request: Request, response: Response)
     {
       const { city, uf, items } = request.query
+      const allItems = await (await knex('items').select('id')).map(item => (item.id))
 
       const parsedItems = String(items)
         .split(',')
@@ -26,16 +27,17 @@ class PointsController {
 
       const points = await knex('points')
           .join('points_items', 'points.id', '=', 'points_items.point_id')
-          .whereIn('points_items.item_id', parsedItems)
+          .whereIn('points_items.item_id', (items) ? parsedItems : allItems)
           .where('city', String(city))
           .where('uf', String(uf))
           .distinct()
-          .select('points.*')
+          .select('points.*', knex.raw('group_concat(points_items.item_id) AS items'))
+          .groupBy('points.id')
 
       const serializedPoints = points.map(point => {
         return {
           ...point,
-          image_url: `http://192.168.0.112:3333/uploads/points_images/${point.image}`
+          image_url: `http://${process.env.LOCAL_IP}:3333/uploads/points_images/${point.image}`
         }
       })
 
@@ -54,7 +56,7 @@ class PointsController {
 
       const serializedPoint = {
         ...point,
-        image_url: `http://192.168.0.112:3333/uploads/points_images/${point.image}`
+        image_url: `http://${process.env.LOCAL_IP}:3333/uploads/points_images/${point.image}`
       }
 
       const items = await knex('items')

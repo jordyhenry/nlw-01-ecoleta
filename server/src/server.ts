@@ -13,6 +13,7 @@ import routes from './routes'
 import cors from 'cors'
 import { errors } from 'celebrate'
 
+require('dotenv').config()
 const app = express()
 
 app.use(cors())

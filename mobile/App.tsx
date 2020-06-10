@@ -1,11 +1,3 @@
-/*
-  TODO:
-  - Implement any Select component for the firts screen
-  - Load map in the select city on the second screen
-  - Optimize the points search (cache all points from that uf and city, and show based on seleted items, avoiding api calls)
-
-*/
-
 import React from 'react';
 import { AppLoading } from 'expo'
 import { StatusBar } from 'react-native';
